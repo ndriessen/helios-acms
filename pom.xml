@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bose.services.acms</groupId>
-    <artifactId>helios-acms</artifactId>
+    <artifactId>acms-platform</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Helios ACMS</name>
+    <name> - ACMS Platform - </name>
     <description>Application Configuration Management Service (ACMS) Project</description>
 
     <properties>
@@ -17,14 +17,15 @@
     </properties>
 
     <modules>
-        <module>helios-acms-api</module>
-        <module>helios-acms-service</module>
-        <module>helios-acms-client</module>
-        <module>helios-acms-client-aem</module>
+        <module>acms-api</module>
+        <module>acms-service</module>
+        <module>acms-client</module>
+        <module>acms-client-aem</module>
+        <module>acmsclienthybris</module>
     </modules>
 
     <build>
-        <plugins>
+        <!--<plugins>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
@@ -38,12 +39,12 @@
                 </executions>
                 <configuration>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <!-- we need this as the top level is a POM packaging -->
+                    &lt;!&ndash; we need this as the top level is a POM packaging &ndash;&gt;
                     <skipPoms>false</skipPoms>
                     <failOnNoGitDirectory>false</failOnNoGitDirectory>
                 </configuration>
             </plugin>
-        </plugins>
+        </plugins>-->
     </build>
 
     <repositories>

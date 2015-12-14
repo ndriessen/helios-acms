@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ant Helper targets used by Maven for building Hybris extensions -->
+
+<!-- The comment below is needed to get rid of all the 'unknown' properties in IntelliJ,
+     since they are actually managed in the maven POMs -->
+<!-- suppress AntResolveInspection -->
+<project name="Maven Hybris Build Helper">
+
+    <property environment="env"/>
+
+    <target name="createDeploymentZipFilesForPDE">
+        <echo>Creating the deployment zip files</echo>
+        <ant antfile="${hybris.local.extension.location}/../platform/build.xml" dir="${hybris.local.extension.location}/../platform/" target="production"/>
+    </target>
+
+    <target name="createDeploymentZipFiles" description="Builds a deployment artifact for our Hybris Platform Code">
+        <echo>=================================================</echo>
+        <echo>======= Creating the deployment zip files =======</echo>
+        <echo>=================================================</echo>
+
+        <property name="hybris.platform.home" value="${hybris.path}/${hybris.version}/hybris/bin/platform/"/>
+        <property name="hybris.temp.home" value="${hybris.path}/${hybris.version}/hybris/temp/hybris/"/>
+        <ant antfile="${hybris.platform.home}/build.xml"
+             dir="${hybris.platform.home}" target="production">
+        </ant>
+
+        <!-- copy back -->
+        <copy file="${hybris.temp.home}/hybrisServer/hybrisServer-AllExtensions.zip"
+              tofile="${project.build.directory}/deployment-${project.version}.zip"/>
+        <echo message="Generated ${project.build.directory}/deployment-${project.version}.zip"/>
+    </target>
+
+    <macrodef name="build-hybris-windows" description="Windows specific implementation of 'build-hybris'. Only runs if OS Family is windows">
+        <attribute name="command"/>
+        <sequential>
+            <exec executable="cmd" dir="${hybris.home}/bin/platform" osfamily="windows">
+                <arg value="/c"/>
+                <arg value=".\setantenv.bat &amp; ant @{command}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <!-- targets to build and deploy extensions -->
+    <target name="validateParameters">
+        <required-property name="project.artifactId"/>
+        <required-property name="basedir"/>
+        <required-property name="project.build.directory"/>
+        <required-property name="hybris.local.extension.location"/>
+        <required-property name="project.build.outputDirectory"/>
+    </target>
+
+    <target name="buildExtension" depends="validateParameters"
+            description="Builds a Maven-module based Hybris extension">
+        <!-- This is used to make non-extension maven module able to be in the same parent project without triggering a hybris build -->
+        <!-- set the property 'is.hybris.extension' to 'false' in your module POM file to skip the hybris build -->
+        <!-- The 'bose-hybris-core' parent POM also uses this to skip building the parent pom as a hybris extension -->
+        <condition property="skip.hybris.build">
+            <equals arg1="${is.hybris.extension}" arg2="false" casesensitive="false"/>
+        </condition>
+        <antcall target="-buildExtension-conditional"/>
+    </target>
+
+    <target name="-buildExtension-conditional" unless="skip.hybris.build">
+        <antcall target="-prepareExtension"/>
+        <antcall target="-buildExtension"/>
+        <antcall target="-copyFilesBackToWorkingDirs"/>
+    </target>
+
+    <target name="-prepareExtension">
+        <copy todir="${project.build.directory}/extension" overwrite="false" preservelastmodified="true" verbose="true">
+            <fileset dir="${basedir}/src/main/extension_files">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension" overwrite="false" preservelastmodified="true" verbose="true">
+            <fileset dir="${basedir}/src/main">
+                <include name="resources/**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/src" overwrite="false" preservelastmodified="true"
+              verbose="true">
+            <fileset dir="${basedir}/src/main/java">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/web" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/src/main/webapp">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/testsrc" overwrite="false" preservelastmodified="true"
+              verbose="true">
+            <fileset dir="${basedir}/src/test/java">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/hmc/src" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/hmc/src/main/java">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/hmc/resources" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/hmc/src/main/resources">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/hmc/jsp" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/hmc/src/main/jsp">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/hmc/testsrc" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/hmc/src/test/java">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/web/src" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/web/src/main/java">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/web/testsrc" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/web/src/test/java">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.directory}/extension/web/webroot" overwrite="false" preservelastmodified="true"
+              failonerror="false" verbose="true">
+            <fileset dir="${basedir}/web/src/main/webapp">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+
+        <!-- delete extension folder first to be sure to have clean version -->
+        <delete failonerror="false">
+            <fileset dir="${hybris.local.extension.location}/${project.artifactId}"/>
+        </delete>
+
+        <!-- Copy prepared extension to the correct location and name -->
+        <copy todir="${hybris.local.extension.location}/${project.artifactId}" overwrite="false"
+              preservelastmodified="true" verbose="true">
+            <fileset dir="${project.build.directory}/extension">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="-buildExtension">
+        <!-- Ant build from the extension -->
+        <echo message="**************************************************************"/>
+        <echo message="** Start building the extension... >>> Cleaning first"/>
+        <echo message="**************************************************************"/>
+
+        <property name="hybrisInstallPath" value="${hybris.install.location}"/>
+        <ant antfile="${hybris.local.extension.location}/${project.artifactId}/build.xml"
+             dir="${hybris.local.extension.location}/${project.artifactId}/" target="clean">
+        </ant>
+        <echo message="Building the extension..."/>
+        <ant antfile="${hybris.local.extension.location}/${project.artifactId}/build.xml"
+             dir="${hybris.local.extension.location}/${project.artifactId}/" target="all">
+        </ant>
+        <echo message="**************************************************************"/>
+        <echo message="** Finished Building extension"/>
+        <echo message="**************************************************************"/>
+
+        <!--Since the platformhome.properties is a generated file which will be recreated at every build, we will copy it over again, before syncing-->
+        <copy todir="${hybris.local.extension.location}/${project.artifactId}" overwrite="true"
+              preservelastmodified="true" verbose="true">
+            <fileset dir="${project.build.directory}/extension">
+                <include name="platformhome.properties"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="-copyFilesBackToWorkingDirs">
+        <!-- Copy generated sources back to this module -->
+        <copy todir="${basedir}/gensrc" overwrite="false" preservelastmodified="true" verbose="true">
+            <fileset dir="${hybris.local.extension.location}/${project.artifactId}/gensrc" erroronmissingdir="false">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${basedir}/src/main/java" overwrite="false" preservelastmodified="true" verbose="true">
+            <fileset dir="${hybris.local.extension.location}/${project.artifactId}/src">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${basedir}/src/test/java" overwrite="false" preservelastmodified="true" verbose="true">
+            <fileset dir="${hybris.local.extension.location}/${project.artifactId}/testsrc" erroronmissingdir="false">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${project.build.outputDirectory}" overwrite="true" preservelastmodified="true" verbose="true">
+            <fileset dir="${hybris.local.extension.location}/${project.artifactId}/classes">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+
+    </target>
+
+    <macrodef name="required-property">
+        <attribute name="name"/>
+        <sequential>
+            <fail message="You must set property '@{name}'">
+                <condition>
+                    <not>
+                        <isset property="@{name}"/>
+                    </not>
+                </condition>
+            </fail>
+        </sequential>
+    </macrodef>
+</project>

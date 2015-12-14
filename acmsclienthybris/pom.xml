@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+
+    <groupId>com.bose.services.acms</groupId>
+    <artifactId>acms-client-hybris</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>ACMS Client - Hybris</name>
+    <description>Hybris extension for ACMS</description>
+
+    <properties>
+        <!-- Hybris version -->
+        <hybris.version>5.7.0.1</hybris.version>
+        <!-- this has to point to the directory where 'mvnToAnt.xml' lives -->
+        <hybris.build.helper.location>${project.basedir}</hybris.build.helper.location>
+        <!-- Base path where hybris will be installed, environment property is set by PDE install -->
+        <hybris.path>/home/niki/hybris</hybris.path>
+
+        <!-- Some relative directories -->
+        <hybris.install.location>${hybris.path}/${hybris.version}/hybris</hybris.install.location>
+        <hybris.extension.location>bin/custom</hybris.extension.location>
+        <hybris.local.extension.location>${hybris.install.location}/${hybris.extension.location}
+        </hybris.local.extension.location>
+        <hybris.config.location>config</hybris.config.location>
+
+        <ant.version>1.9.1</ant.version>
+        <spring.version>4.1.7.RELEASE</spring.version>
+        <!-- below if needed for some features like @ConfigurationProperties -->
+        <!--<spring.version>4.2.3.RELEASE</spring.version>-->
+
+        <!--<spring.ws.version>2.1.2.RELEASE</spring.ws.version>-->
+        <spring.ws.version>2.2.0.RELEASE</spring.ws.version>
+
+        <sonar.sources>src/main/java,hmc/src/main/java</sonar.sources>
+        <sonar.jacoco.reportPath>../target/jacoco.exec</sonar.jacoco.reportPath>
+
+        <is.hybris.extension>true</is.hybris.extension>
+        <hybris.skip.clean.phase>false</hybris.skip.clean.phase>
+        <sonar.sources>src/main/java</sonar.sources>
+        <pitReport.skip>true</pitReport.skip>
+    </properties>
+
+    <!--dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-parent</artifactId>
+                <version>Brixton.M3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-bus-parent</artifactId>
+                <version>1.0.2.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-parent</artifactId>
+                <version>1.3.0.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId></groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement-->
+
+    <dependencies>
+        <!-- spring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>1.3.0.RELEASE</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+            <version>1.1.0.M3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-client</artifactId>
+            <version>1.1.0.M3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bus-amqp</artifactId>
+            <version>1.0.3.RELEASE</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-oxm</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <version>${spring.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.4.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Hybris Dependencies -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.core</groupId>
+            <artifactId>coreserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.bootstrap</groupId>
+            <artifactId>models</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.bootstrap</groupId>
+            <artifactId>ybootstrap</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.catalog</groupId>
+            <artifactId>catalogserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.impex</groupId>
+            <artifactId>impexserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.workflow</groupId>
+            <artifactId>workflowserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.europe1</groupId>
+            <artifactId>europe1server</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.promotions</groupId>
+            <artifactId>promotionsserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.promotions</groupId>
+            <artifactId>promotionshmc</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-commerce.customerreview</groupId>
+            <artifactId>customerreviewserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.vouchers</groupId>
+            <artifactId>voucherserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.platformservices</groupId>
+            <artifactId>platformservices</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.commons</groupId>
+            <artifactId>commonsserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.validation</groupId>
+            <artifactId>validationserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-platform-optional.corepluscommons</groupId>
+            <artifactId>corepluscommonsserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-commerce.basecommerce</groupId>
+            <artifactId>basecommerceserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-commerce.payment</groupId>
+            <artifactId>paymentserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-commerce.commerceservices</groupId>
+            <artifactId>commerceservicesserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-content.cms2</groupId>
+            <artifactId>cms2server</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-commerce.commercefacades</groupId>
+            <artifactId>commercefacadesserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-commerce.commercewebservicescommons</groupId>
+            <artifactId>commercewebservicescommonsserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.processing</groupId>
+            <artifactId>processingserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-content.classificationsystems</groupId>
+            <artifactId>classificationsystemsserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-platform-optional.hmc</groupId>
+            <artifactId>hmcserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-platform-optional.hmc</groupId>
+            <artifactId>hmcwebserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.ext-cockpit.cockpitserver</groupId>
+            <artifactId>cockpitserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.hybris.platform.deliveryzone</groupId>
+            <artifactId>deliveryzoneserver</artifactId>
+            <version>${hybris.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                        <source>1.8</source>
+                        <target>1.8</target>
+                    </configuration>
+                </plugin>
+
+                <!--
+                within a multi module project test-jars are not installed during test phase.
+                As workaroud we creat the test-jar ourselves and create an empty test-jar wihtin the local maven repository.
+                We are using the following two plugins for this workaround
+                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>test-jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- install models.jar (in hybris platform directory) in the local repository -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.5.1</version>
+                    <executions>
+                        <execution>
+                            <id>install-models.jar</id>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>install-file</goal>
+                            </goals>
+                            <configuration>
+                                <file>${hybris.install.location}\bin\platform\bootstrap\bin\models.jar</file>
+                                <groupId>de.hybris.platform.bootstrap</groupId>
+                                <artifactId>models</artifactId>
+                                <version>${hybris.version}</version>
+                                <packaging>jar</packaging>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Clean up extra folders -->
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>2.6</version>
+                    <configuration>
+                        <skip>${hybris.skip.clean.phase}</skip>
+                        <filesets>
+                            <fileset>
+                                <directory>gensrc</directory>
+                            </fileset>
+                            <fileset>
+                                <includes>
+                                    <include>${project.artifactId}/**/*</include>
+                                    <include>${project.artifactId}</include>
+                                </includes>
+                                <directory>${hybris.local.extension.location}</directory>
+                            </fileset>
+                        </filesets>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
+
+            <!-- Hybris ant will generate some code in the gensrc folder of each module, this needs to be included to compile our own code as well -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.9.1</version>
+                <executions>
+                    <execution>
+                        <id>add-gensrc-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>gensrc</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-web-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>web/src/main/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-hmc-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>hmc/src/main/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-web-test-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>web/src/test/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-hmc-test-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>hmc/src/test/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.14.1</version>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <argLine>-noverify</argLine>
+                            <argLine>-Xms512m -Xmx512m</argLine>
+                            <systemPropertyVariables>
+                                <jacoco-agent.destfile>${sonar.jacoco.reportPath}</jacoco-agent.destfile>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- download dependencies to target/extension/lib folder -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/extension/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <excludeScope>provided</excludeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copy all other required files to the target/extension folder -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                        <version>${ant.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ant-contrib</groupId>
+                        <artifactId>ant-contrib</artifactId>
+                        <version>1.0b3</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <!-- Initialize Hybris installation on clean -->
+                        <!-- This will also download and install the correct version of hybris as needed (once) -->
+                        <id>initialize-hybris</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- this ensures maven properties are available in the antrun "process" -->
+                                <taskdef resource="net/sf/antcontrib/antcontrib.properties"
+                                         classpathref="maven.plugin.classpath"/>
+                                <!-- this is to ensure the Hybris initialization ONLY runs in this parent POM -->
+                                <!-- DO NOT CHANGE THIS, or the build breaks (it clean for each module which breaks extension dependencies -->
+                                <condition property="hybris.init.run">
+                                    <equals arg1="${project.artifactId}" arg2="bose-hybris-core"/>
+                                </condition>
+                                <ant antfile="${hybris.build.helper.location}/hybris.xml" target="init-hybris"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-hybris-extension</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef resource="net/sf/antcontrib/antcontrib.properties"
+                                         classpathref="maven.plugin.classpath"/>
+                                <!-- This call will fail the build if no Hybris installation can be found.
+                                     Run 'mvn clean' to install & initialize and fix this error -->
+                                <ant antfile="${hybris.build.helper.location}/hybris.xml" target="check-hybris"/>
+                                <ant antfile="${hybris.build.helper.location}/mvnToAnt.xml" target="buildExtension"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>bose-nexus-public</id>
+            <name>bose-nexus-public</name>
+            <url>http://nexus.gd.bose.com/content/groups/public</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>bose-nexus-public</id>
+            <name>bose-nexus-public</name>
+            <url>http://nexus.gd.bose.com/content/groups/public</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <!--<profiles>
+        <profile>
+            <id>release-platform</id>
+            <modules>
+                <module>hybris-deployment</module>
+            </modules>
+        </profile>
+    </profiles>-->
+</project>

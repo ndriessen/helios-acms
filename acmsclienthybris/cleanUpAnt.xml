@@ -1,0 +1,34 @@
+<project name="bose">
+
+    <property environment="env"/>
+
+    <!-- Load the ant contrib lib -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath>
+            <pathelement location="${env.M2_REPO}/repository/ant-contrib/ant-contrib/1.0b3/ant-contrib-1.0b3.jar"/>
+        </classpath>
+    </taskdef>
+
+    <target name="cleanup">
+        <echo message="LOCATION= ${hybris.local.extension.location}, PROJECT DIR= ${project.build.directory}"/>
+        <dirset id="dist.contents" dir="${hybris.local.extension.location}" includes="*"/>
+        <property name="prop.dist.contents" refid="dist.contents"/>
+        <echo>${prop.dist.contents}</echo>
+
+        <for list="${prop.dist.contents}" param="directory" delimiter=";">
+            <sequential>
+                <if>
+                    <not>
+                        <available file="${project.build.directory}\..\@{directory}" type="dir"
+                                   property="git.directory.present"/>
+                    </not>
+                    <then>
+                        <delete dir="${hybris.local.extension.location}\@{directory}"/>
+                    </then>
+                </if>
+            </sequential>
+        </for>
+
+    </target>
+
+</project>
