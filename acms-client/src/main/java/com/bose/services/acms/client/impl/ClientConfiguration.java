@@ -1,6 +1,7 @@
 package com.bose.services.acms.client.impl;
 
 import com.bose.services.acms.api.ConfigurationClientException;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -8,6 +9,7 @@ import java.util.Properties;
 /**
  * Holds configuration values.
  */
+@SuppressWarnings("unused")
 public class ClientConfiguration {
     public static final String PROP_ACMS_URI = "acms.uri";
     public static final String PROP_ACMS_USERNAME = "acms.username";
@@ -27,13 +29,17 @@ public class ClientConfiguration {
     public ClientConfiguration() throws ConfigurationClientException {
         Properties properties = new Properties();
         try {
-            properties.load(getClass().getResourceAsStream("application.properties"));
+            properties.load(getClass().getResourceAsStream("/application.properties"));
         } catch (IOException e) {
             throw new ConfigurationClientException("Error reading configuration client properties from classpath:application.properties", e);
         }
         this.uri = properties.getProperty(PROP_ACMS_URI, DEFAULT_ACMS_URI);
-        this.username = properties.getProperty(PROP_ACMS_USERNAME);
-        this.password = properties.getProperty(PROP_ACMS_PASSWORD);
+        if(!StringUtils.isEmpty(properties.getProperty(PROP_ACMS_USERNAME))) {
+            this.username = properties.getProperty(PROP_ACMS_USERNAME).trim();
+        }
+        if(!StringUtils.isEmpty(properties.getProperty(PROP_ACMS_PASSWORD))) {
+            this.password = properties.getProperty(PROP_ACMS_PASSWORD).trim();
+        }
         this.discovery = new Discovery();
         this.discovery.setEnabled(Boolean.getBoolean(properties.getProperty(PROP_ACMS_DISCOVERY_ENABLED, "false")));
         this.discovery.setServiceId(properties.getProperty(PROP_ACMS_DISCOVERY_SERVICEID, DEFAULT_ACMS_DISCOVERY_SERVICEID));

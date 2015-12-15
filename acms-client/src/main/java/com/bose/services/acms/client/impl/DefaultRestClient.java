@@ -29,7 +29,6 @@ public class DefaultRestClient {
     }
 
     public Configuration getConfiguration(String label, String name, String... profiles) {
-        Configuration configuration = new Configuration();
         RestTemplate restTemplate = this.restTemplate == null ? getSecureRestTemplate(clientConfiguration)
                 : this.restTemplate;
         Exception error = null;
@@ -48,7 +47,7 @@ public class DefaultRestClient {
                             result.getName(),
                             result.getProfiles() == null ? "" : Arrays.asList(result.getProfiles()),
                             result.getLabel(), result.getVersion()));
-                    return configuration;
+                    return result;
                 }
             }
         } catch (HttpServerErrorException e) {

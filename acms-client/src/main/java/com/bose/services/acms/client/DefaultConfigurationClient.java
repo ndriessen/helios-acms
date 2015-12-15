@@ -1,5 +1,10 @@
+package com.bose.services.acms.client;
+
 import com.bose.services.acms.api.*;
-import com.bose.services.acms.client.impl.*;
+import com.bose.services.acms.client.impl.ClientConfiguration;
+import com.bose.services.acms.client.impl.DefaultCacheProvider;
+import com.bose.services.acms.client.impl.DefaultHierarchyStrategy;
+import com.bose.services.acms.client.impl.DefaultRestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -12,12 +17,11 @@ import java.util.*;
  *
  * @author Niki Driessen
  */
-public class DefaultConfigurationClient implements ConfigurationClient, ConfigurationRefreshListener {
-    private static final Logger logger = LoggerFactory.getLogger(DefaultConfigurationClient.class);
-
+public class DefaultConfigurationClient implements ConfigurationClient {
     public static final String DEFAULT_PROFILE = "default";
-
+    private static final Logger logger = LoggerFactory.getLogger(DefaultConfigurationClient.class);
     private List<ConfigurationRefreshListener> listeners = new ArrayList<>();
+    //TODO: implement crypto support...
     private ClientCryptoProvider cryptoProvider;
     private ConfigurationCacheProvider cacheProvider;
     private ConfigurationHierarchyStrategy configurationHierarchyStrategy;
@@ -27,6 +31,7 @@ public class DefaultConfigurationClient implements ConfigurationClient, Configur
 
     private Set<String> defaultProfiles;
 
+    //TODO: move default profiles to CLientConfiguration and refactor to support receiving a custom instance of that.
     public DefaultConfigurationClient(String... defaultProfiles) {
         try {
             this.defaultProfiles = new LinkedHashSet<>();
@@ -42,18 +47,35 @@ public class DefaultConfigurationClient implements ConfigurationClient, Configur
         }
     }
 
-    public void addRefreshListener(ConfigurationRefreshListener listener){
+    /*public static void main(String[] args) {
+        DefaultConfigurationClient client = new DefaultConfigurationClient();
+        Properties properties = client.getConfiguration("tax");
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            System.out.println(String.format("%s=%s", entry.getKey(), entry.getValue()));
+        }
+        RefreshChannelProvider manager = new DefaultRefreshChannel(client);
+        try {
+            manager.open();
+            while (true) {
+                //just keep waiting
+            }
+        } finally {
+            manager.close();
+        }
+    }*/
+
+    public void registerListener(ConfigurationRefreshListener listener) {
         this.listeners.add(listener);
     }
 
-    public void removeRefreshListener(ConfigurationRefreshListener listener){
+    public void unregisterListener(ConfigurationRefreshListener listener) {
         this.listeners.remove(listener);
     }
 
-    protected void triggerListeners(String name){
+    protected void triggerListeners(String name, Properties properties) {
         for (ConfigurationRefreshListener listener : listeners) {
             try {
-                listener.refresh(name);
+                listener.refresh(name, properties);
             } catch (Exception e) {
                 logger.error("Error executing refresh listener", e);
             }
@@ -91,8 +113,8 @@ public class DefaultConfigurationClient implements ConfigurationClient, Configur
 
     @Override
     public boolean refresh(String name) throws ConfigurationClientException {
-        boolean refreshed = false;
-        if (RefreshChannelManager.REFRESH_ALL.equalsIgnoreCase(name)) {
+        Properties configuration = null;
+        if (ConfigurationRefreshListener.REFRESH_ALL.equalsIgnoreCase(name)) {
             cacheProvider.clear();
             return true;
         } else {
@@ -100,16 +122,16 @@ public class DefaultConfigurationClient implements ConfigurationClient, Configur
                 List<Configuration> list = cacheProvider.evict(name, true);
                 if (list != null) {
                     for (Configuration conf : list) {
-                        getConfiguration(conf.getLabel(), conf.getName(), conf.getProfilesAsArray());
-                        refreshed = true;
+                        configuration = getConfiguration(conf.getLabel(), conf.getName(), conf.getProfilesAsArray());
                     }
                 }
-            }
+            }//else:not yet fetched, so not needed, will get fresh version on first fetch anyway
         }
-        if(refreshed) {
-            triggerListeners(name);
+        if (configuration != null) {
+            triggerListeners(name, configuration);
+            return true;
         }
-        return refreshed;
+        return false;
     }
 
     @Override

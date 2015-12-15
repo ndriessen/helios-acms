@@ -1,7 +1,8 @@
-package com.bose.services.acms.client.impl;
+package com.bose.services.acms.client;
 
 import com.bose.services.acms.api.ConfigurationClientException;
 import com.bose.services.acms.api.ConfigurationRefreshListener;
+import com.bose.services.acms.api.RefreshChannelProvider;
 import com.rabbitmq.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,15 +13,23 @@ import java.io.IOException;
 /**
  * Connects to the Spring Bus AMQP channel to listen for configuration refresh events.
  */
-public class RefreshChannelManager {
-    private static final Logger logger = LoggerFactory.getLogger(RefreshChannelManager.class);
+public class DefaultRefreshChannel implements RefreshChannelProvider {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultRefreshChannel.class);
     private static final String AMQP_REFRESH_CHANNEL = "binder.springCloudBus";
     private static final String CONSUMER_TAG_PREFIX = "acms.client-";
     private Connection connection;
     private Channel channel;
 
+    private DefaultConfigurationClient client;
+
+    public DefaultRefreshChannel(DefaultConfigurationClient client) {
+        this.client = client;
+    }
+
+    @Override
     public void open() {
         try {
+            //todo: make configurable
             ConnectionFactory factory = new ConnectionFactory();
             factory.setAutomaticRecoveryEnabled(true);
             //factory.setUri("amqp://userName:password@hostName:portNumber/virtualHost");
@@ -29,12 +38,19 @@ public class RefreshChannelManager {
             channel.basicConsume(AMQP_REFRESH_CHANNEL, true, getConsumerTag(), new DefaultConsumer(channel){
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-                    RefreshChannelManager.this.onEvent(getConfigurationNameFromEvent(body));
+                    String configName = getConfigurationNameFromEvent(body);
+                    logger.info("Received configuration REFRESH event for " + configName);
+                    DefaultRefreshChannel.this.onRefresh(configName);
                 }
             });
         } catch (Exception e) {
             throw new ConfigurationClientException("Error opening RabbitMQ channel to listen for REFRESH events.", e);
         }
+    }
+
+    @Override
+    public void onRefresh(String configurationName) {
+        this.client.refresh(configurationName);
     }
 
     protected String getConsumerTag() {
@@ -43,7 +59,8 @@ public class RefreshChannelManager {
     }
 
     protected String getConfigurationNameFromEvent(byte[] body) {
-        logger.info("Received configuration REFRESH notification");
+        //Spring Cloud Bus is using Kryo to serialize the body. In AEM I couldn't get this to work (classloading issues)
+        //this dirty workaround does the trick for now. We want to move away from AMQP anyway so we can also move to something easier payload wise (text based)
         String configurationName = null;
         try {
             StringBuilder name = new StringBuilder();
@@ -67,6 +84,7 @@ public class RefreshChannelManager {
         return configurationName;
     }
 
+    @Override
     public void close() {
         try {
             if (channel != null) {
@@ -81,9 +99,5 @@ public class RefreshChannelManager {
         } catch (Exception e) {
             logger.warn("Error cleaning up consumer and connections...", e);
         }
-    }
-
-    protected void onEvent(String configurationName) {
-
     }
 }

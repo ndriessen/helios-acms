@@ -59,7 +59,9 @@ public class DefaultCacheProvider implements ConfigurationCacheProvider {
     }
 
     @Override
-    public void clear() {
+    public List<Configuration> clear() {
+        List<Configuration> result = new ArrayList<>(this.cache.values());
         this.cache.clear();
+        return result;
     }
 }
