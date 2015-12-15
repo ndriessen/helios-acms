@@ -17,8 +17,17 @@ public interface ConfigurationClient {
     Properties getConfiguration(String label, String name, String... profiles) throws ConfigurationClientException;
     Properties getConfiguration(String name, String... profiles) throws ConfigurationClientException;
     boolean refresh(String name) throws ConfigurationClientException;
-    void addRefreshListener(ConfigurationRefreshListener listener);
-    void removeRefreshListener(ConfigurationRefreshListener listener);
+
+    /**
+     * TODO: move to Channel Provider
+     * @param listener
+     */
+    void registerListener(ConfigurationRefreshListener listener);
+    /**
+     * TODO: move to Channel Provider
+     * @param listener
+     */
+    void unregisterListener(ConfigurationRefreshListener listener);
 
     void setCryptoProvider(ClientCryptoProvider provider);
     void setCacheProvider(ConfigurationCacheProvider cacheProvider);

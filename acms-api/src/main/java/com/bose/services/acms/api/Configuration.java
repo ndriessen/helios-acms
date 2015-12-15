@@ -59,7 +59,9 @@ public class Configuration {
     }
 
     public String[] getProfilesAsArray() {
-
+        if(profiles == null || profiles.size() == 0){
+            return new String[]{};
+        }
         return profiles.toArray(new String[profiles.size()]);
     }
 

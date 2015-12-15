@@ -10,5 +10,5 @@ public interface ConfigurationCacheProvider {
     void cache(Configuration configuration);
     boolean contains(String partialKey, boolean partialKeyMatching);
     List<Configuration> evict(String key, boolean partialKeyMatching);
-    void clear();
+    List<Configuration> clear();
 }
