@@ -20,7 +20,7 @@ import javax.jcr.Session;
 public class ManagedConfigurationActivator implements BundleActivator {
     private static final Logger logger = LoggerFactory.getLogger(ManagedConfigurationActivator.class);
     private static final String AMQP_REFRESH_CHANNEL = "binder.springCloudBus";
-    private static final String CONSUMER_TAG_PREFIX = "helios.acms.client.aem-";
+    private static final String CONSUMER_TAG_PREFIX = "acms.client.aem-";
     private Channel channel;
     private ConfigRefreshConsumer consumer;
     private Connection rabbitConnection;

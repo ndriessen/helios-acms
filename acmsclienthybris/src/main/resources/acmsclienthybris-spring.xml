@@ -5,6 +5,14 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean class="com.bose.services.acms.client.hybris.HybrisAcmsConfiguration"/>
+    <bean class="com.bose.services.acms.client.hybris.ApplicationConfigurationServiceConfigurer">
+        <property name="configurationName" value="tax"/>
+        <property name="profiles" value="dev,us"/>
+    </bean>
+
+    <bean class="com.bose.services.acms.client.hybris.TestConfigBean">
+        <property name="taxUsername" value="${tax.username:default_user}"/>
+    </bean>
+
 
 </beans>

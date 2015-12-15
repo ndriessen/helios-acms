@@ -8,7 +8,7 @@ import org.junit.runners.JUnit4;
  *
  */
 @RunWith(JUnit4.class)
-public class AcmsRestClientTest {
+public class DefaultRestClientTest {
 
     @Test
     public void testGetConfiguration() throws Exception {

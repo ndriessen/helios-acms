@@ -76,6 +76,11 @@
     </dependencyManagement-->
 
     <dependencies>
+        <dependency>
+            <groupId>com.bose.services.acms</groupId>
+            <artifactId>acms-api</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
         <!-- spring -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

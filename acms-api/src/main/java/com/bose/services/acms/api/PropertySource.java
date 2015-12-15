@@ -1,10 +1,16 @@
-package com.bose.services.acms.client;
+package com.bose.services.acms.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
+/**
+ * Simple VO representing a single configuration source in the response from the ACMS service.
+ *
+ * @see Configuration
+ * @author Niki Driessen
+ */
 public class PropertySource {
 
     private String name;
