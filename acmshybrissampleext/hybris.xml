@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This ant script is used by maven for manage installing Hybris instances for extension building -->
+<project name="Maven Hybris Install Helper">
+
+    <target name="run-hybris">
+        <exec dir="/home/niki/hybris/5.7.0.1/hybris/bin/platform/" command="./hybrisserver.sh debug"/>
+    </target>
+
+    <property name="hybris.filestore.url"
+              value="https://filestore.gd.bose.com/provision/software/hybris/commerce-suite"/>
+
+    <target name="check-hybris" depends="-init-hybris-check-input,-init-hybris-home"
+            description="Checks if a hybris install is available for building purposes">
+        <!--suppress AntResolveInspection -->
+        <fail message="No existing hybris install found. Please run 'maven clean install' first to initialize everything">
+            <condition>
+                <not>
+                    <available file="${hybris.home}" property="hybris.init.exists"/>
+                </not>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="create-distribution" depends="-init-hybris-check-input,-init-hybris-home"
+            description="Builds a deployment artifact for our Hybris Platform Code">
+        <echo>==================================================</echo>
+        <echo>======= Creating the Distribution ZIP file =======</echo>
+        <echo>==================================================</echo>
+        <fail message="You must set 'dist.finalzipname' and 'dist.properties.file' properties">
+            <condition>
+                <not>
+                    <or>
+                        <isset property="dist.finalzipname"/>
+                        <isset property="dist.properties.file"/>
+                    </or>
+                </not>
+            </condition>
+        </fail>
+        <echo message="Using ZIP Name: ${dist.finalzipname}"/>
+        <echo message="Using Properties file: ${dist.properties.file}"/>
+        <loadproperties srcfile="${dist.properties.file}"/>
+        <build-hybris
+                command="-Ddist.finalzipname=&quot;${dist.finalzipname}&quot; -Ddist.include.platform=${dist.include.platform} -Ddist.create.en.langpack=${dist.create.en.langpack} -Ddist.development.dist={dist.development.dist} -Ddist.extensions.activated=&quot;${dist.extensions.activated}&quot; -Ddist.extensions.binary=&quot;${dist.extensions.binary}&quot; dist"/>
+    </target>
+
+    <!-- You must pass
+         'hybris.version' from maven (see bose-hybris-core POM)
+         'hybris.path' from maven (defaults to: ${env.HYBRIS_INSTALL_PATH} )
+
+         If you want to override the values maven has you can pass the new value on the maven command line, e.g.:
+         mvn clean install -Dhybris.path="${bamboo.agentWorkingDirectory}/${bamboo.agentId}/"
+
+         This script will only run if a module set the property hybris.init.run to true.
+
+         NOTE: THIS MUST ONLY HAPPEN ONCE, IN THE BEGINNING OF THE BUILD, OR ALL SUB-MODULE BUILDS WILL FAIL!!!
+         (since this script throws out the previously build extensions for each maven module....)
+    -->
+    <target name="init-hybris" depends="-init-hybris-check-input,-init-hybris-home" if="hybris.init.run"
+            description="Downloads and initializes a hybris installation for building purposes">
+
+        <available file="${hybris.home}" property="hybris.init.exists"/>
+        <echo message="Existing hybris? ${hybris.init.exists}"/>
+        <antcall target="-init-hybris-clean"/>
+        <antcall target="-init-hybris-install"/>
+        <antcall target="-init-hybris-build-platform"/>
+    </target>
+
+    <target name="-init-hybris-home">
+        <echo message="Specified Hybris installation path: ${hybris.path}"/>
+        <echo message="Specified Hybris version: ${hybris.version}"/>
+        <!--Set 'hybris.home' -->
+        <!--suppress AntResolveInspection -->
+        <property name="hybris.home" value="${hybris.path}/${hybris.version}/hybris"/>
+        <echo message="Using Hybris 'Home' : ${hybris.home}"/>
+    </target>
+
+    <!-- helper targets -->
+    <target name="-init-hybris-check-input" description="validates required input is present">
+        <fail message="You must provide 'hybris.version' and 'hybris.path' as input properties">
+            <condition>
+                <not>
+                    <or>
+                        <isset property="hybris.version"/>
+                        <isset property="hybris.path"/>
+                    </or>
+                </not>
+            </condition>
+        </fail>
+    </target>
+
+    <target name="-init-hybris-install" unless="hybris.init.exists"
+            description="Download and Install the specified Hybris version (if it isn't installed yet) ">
+        <!--suppress AntResolveInspection -->
+        <property name="hybris.zip.name" value="hybris-commerce-suite-${hybris.version}-custom.zip"/>
+        <!-- Check if we downloaded the zip previously... -->
+        <available file="${java.io.tmpdir}/${hybris.zip.name}" property="hybris.init.downloaded"/>
+        <!-- Downloaded if needed -->
+        <antcall target="-init-hybris-download"/>
+        <!-- Unzip hybris install package -->
+        <!--suppress AntResolveInspection -->
+        <unzip src="${java.io.tmpdir}/${hybris.zip.name}" dest="${hybris.path}/${hybris.version}" overwrite="true"/>
+        <chmod perm="ug+x">
+            <fileset dir="${hybris.home}/bin/platform">
+                <include name="*.sh"/>
+            </fileset>
+        </chmod>
+    </target>
+
+    <target name="-init-hybris-download" unless="hybris.init.downloaded"
+            description="Downloads a hybris install package from the filestore">
+        <echo message="No Hybris installation found, downloading from: ${hybris.filestore.url}/${hybris.zip.name}"/>
+        <get src="${hybris.filestore.url}/${hybris.zip.name}" dest="${java.io.tmpdir}/${hybris.zip.name}" verbose="on"/>
+    </target>
+
+    <target name="-init-hybris-clean" if="hybris.init.exists"
+            description="Cleans the Hybris install, deletes all bose application code and configuration">
+        <!--suppress AntResolveInspection -->
+        <echo message="Cleaning up existing Hybris installation..."/>
+        <delete dir="${hybris.home}/bin/custom" includeemptydirs="true"/>
+        <delete dir="${hybris.home}/config" includeemptydirs="true"/>
+    </target>
+
+    <target name="-init-hybris-build-platform" description="Initializes the Hybris platform after a clean">
+        <!-- initialize configuration -->
+        <build-hybris command="clean -Dinput.template=develop"/>
+        <!-- deploy our own configuration from our cookbook -->
+        <antcall target="-init-hybris-copy-config"/>
+        <!-- initial system build -->
+        <build-hybris command="clean all"/>
+    </target>
+
+    <target name="-init-hybris-copy-config"
+            description="Copies over the cookbook configuration to the hybris install">
+        <!-- ALWAYS COPY THE CURRENT CONFIGURATION -->
+        <!-- TODO: This hard coded path to the cookbook is not stable. Look to have maven copy it over using artifact references so we have a more stable path to use here -->
+        <property name="config.files.src"
+                  value="${hybris.build.helper.location}/../../bose-ops-platform/cookbook/src/main/resources/global-digital/files/default"/>
+        <copy file="${config.files.src}/localextensions.xml" tofile="${hybris.home}/config/localextensions.xml"
+              overwrite="true" force="true"/>
+        <copy file="${config.files.src}/build.local.properties" tofile="${hybris.home}/config/local.properties"
+              overwrite="true" force="true"/>
+        <copy file="${config.files.src}/isdkey.txt" tofile="${hybris.home}/config/paymentprovider/isdkey.txt"
+              overwrite="true" force="true"/>
+        <copy file="${config.files.src}/hybrislicence.jar" tofile="${hybris.home}/config/licence/hybrislicence.jar"
+              overwrite="true" force="true"/>
+    </target>
+
+    <!-- Helper macro definitions -->
+
+    <macrodef name="build-hybris" description="Execute a Hybris platform build. Pass the ant targets to run as 'command'">
+        <attribute name="command"/>
+        <sequential>
+            <!-- calls both windows and linux as the commands will only run on the correct platform anyway -->
+            <build-hybris-windows command="@{command}"/>
+            <build-hybris-linux command="@{command}"/>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="build-hybris-windows" description="Windows specific implementation of 'build-hybris'. Only runs if OS Family is windows">
+        <attribute name="command"/>
+        <sequential>
+            <exec executable="cmd" dir="${hybris.home}/bin/platform" osfamily="windows">
+                <arg value="/c"/>
+                <arg value=".\setantenv.bat &amp; ant @{command}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="build-hybris-linux" description="Linux specific implementation of 'build-hybris'. Only runs if OS Family is Linux/Unix">
+        <attribute name="command"/>
+        <sequential>
+            <exec executable="bash" dir="${hybris.home}/bin/platform" osfamily="unix">
+                <arg value="-c"/>
+                <arg value="cd ${hybris.home}/bin/platform ; chmod a+x setantenv.sh ; . ./setantenv.sh ; ant @{command}"/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+</project>

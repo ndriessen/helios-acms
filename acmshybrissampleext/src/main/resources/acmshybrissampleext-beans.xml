@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+ [y] hybris Platform
+
+ Copyright (c) 2000-2013 hybris AG
+ All rights reserved.
+
+ This software is the confidential and proprietary information of hybris
+ ("Confidential Information"). You shall not disclose such Confidential
+ Information and shall use it only in accordance with the terms of the
+ license agreement you entered into with hybris.
+-->
+
+<!--
+	ATTENTION: This is just an example file. You have to edit it according to your needs.
+-->
+
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="beans.xsd">
+
+    <!--&lt;!&ndash; Data objects &ndash;&gt;
+    <bean class="com.bose.hybris.webservice.data.models.CountryNameData">
+        <property name="lang" type="String"/>
+        <property name="value" type="String"/>
+    </bean>
+
+    <bean class="com.bose.hybris.webservice.data.models.RegionNameData">
+        <property name="lang" type="String"/>
+        <property name="value" type="String"/>
+    </bean>
+
+    <bean class="de.hybris.platform.commercefacades.user.data.CountryData">
+        <property name="regions" type="java.util.List&lt;de.hybris.platform.commercefacades.user.data.RegionData>"/>
+        <property name="countryNames" type="java.util.List&lt;com.bose.hybris.webservice.data.models.CountryNameData>"/>
+    </bean>
+
+    <bean class="de.hybris.platform.commercefacades.user.data.RegionData">
+        <property name="regionNames" type="java.util.List&lt;com.bose.hybris.webservice.data.models.RegionNameData>"/>
+    </bean>
+
+    <bean class="de.hybris.platform.commercefacades.user.data.AddressData">
+        <property name="addressValidationFailed" type="java.lang.Boolean"/>
+        <property name="addressValidationServiceUnavailable" type="java.lang.Boolean"/>
+        <property name="careOf" type="String"/>
+    </bean>
+
+    &lt;!&ndash; DTO's &ndash;&gt;
+    <bean class="com.bose.hybris.webservice.dto.models.CountryNameWsDTO">
+        <property name="lang" type="String"/>
+        <property name="value" type="String"/>
+    </bean>
+
+    <bean class="com.bose.hybris.webservice.dto.models.RegionNameWsDTO">
+        <property name="lang" type="String"/>
+        <property name="value" type="String"/>
+    </bean>
+
+    <bean class="de.hybris.platform.commercewebservicescommons.dto.user.CountryWsDTO">
+        <property name="regions" type="java.util.List&lt;de.hybris.platform.commercewebservicescommons.dto.user.RegionWsDTO>"/>
+        <property name="countryNames" type="java.util.List&lt;com.bose.hybris.webservice.dto.models.CountryNameWsDTO>"/>
+    </bean>
+
+    <bean class="de.hybris.platform.commercewebservicescommons.dto.user.RegionWsDTO">
+        <property name="regionNames" type="java.util.List&lt;com.bose.hybris.webservice.dto.models.RegionNameWsDTO>"/>
+    </bean>
+
+    <bean class="com.bose.hybris.common.dto.ResponseWsDTO">
+        <property name="success" type="java.lang.Boolean"/>
+        <property name="message" type="String"/>
+    </bean>-->
+
+</beans>

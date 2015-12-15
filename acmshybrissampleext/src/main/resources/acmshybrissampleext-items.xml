@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    This file uses typecodes for deployment ranging from 10200 - 10300
+
+    More info: https://confluence.gd.bose.com/display/GDDEV/Type+Deployment+Attribute
+-->
+<items xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="items.xsd">
+
+</items>

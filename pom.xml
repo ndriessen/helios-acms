@@ -22,6 +22,7 @@
         <module>acms-client</module>
         <module>acms-client-aem</module>
         <module>acmsclienthybris</module>
+        <module>acmshybrissampleext</module>
     </modules>
 
     <build>
